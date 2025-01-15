@@ -6,10 +6,10 @@
         <div class="window-maximize"></div>
         <div class="window-close"></div>
       </div>
-      <div class="window-title">코딩하는 안다형</div>
+      <div class="window-title">제목</div>
     </div>
     <div class="window-content">
-      <p>맥 스타일의 창을 만들어주는 CSS.<br>공지사항을 입력하거나 안내하는 역할을 할 수 있습니다.<br>사용 방법은 무궁무진하죠!~</p>
+      <p>내용 1<br>내용 2<br>내용 3</p>
     </div>
   </div>
 </template>
