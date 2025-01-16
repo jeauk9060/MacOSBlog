@@ -1,118 +1,214 @@
 <template>
-  <div id="resize-drag" class="resize-drag" v-show="!minimized">
+  <div id="resize-drag" class="resize-drag" v-show="!windowData.minimized && !windowData.closed" :style="{
+    transform: `translate(${position.x}px, ${position.y}px)`,
+    width: size.width + 'px',
+    height: size.height + 'px',
+  }" @mousemove="checkResizeCursor" @mousedown="startDragOrResize" @mouseleave="resetCursor">
     <div class="window-header">
       <div class="window-controls">
-        <button class="window-close" @click="handleClose"></button>
-        <button class="window-minimize" @click="handleMinimize"></button>
-        <button class="window-maximize" @click="handleMaximize"></button>
+        <button class="window-close" @click="closeWindow"></button>
+        <button class="window-minimize" @click="toggleMinimized"></button>
+        <button class="window-maximize" @click="toggleMaximized"></button>
       </div>
-      <div class="window-title">제목</div>
+      <div class="window-title">{{ windowData.name }}</div>
     </div>
     <div class="window-content">
-      <p>내용 1<br>내용 2<br>내용 3</p>
+      <p>{{ windowData.content }}</p>
     </div>
   </div>
 </template>
 
-
 <script setup>
-import { ref, onMounted } from "vue";
-import interact from "interactjs";
+import { useWindowStore } from '@/stores/WindowStore';
+import { ref, reactive, computed } from 'vue';
 
-// 창 상태 관리
-const minimized = ref(false);
-const maximized = ref(false);
+const windowStore = useWindowStore();
+const windowData = computed(() => windowStore.windows.find(win => win.name === 'blog'));
 
-// 최소화
-const handleMinimize = () => {
-  minimized.value = true; // 창 전체를 숨김
-  console.log("Window minimized");
+const position = reactive({ x: 0, y: 0 });
+const size = reactive({ width: 500, height: 300 });
+
+const isDragging = ref(false);
+const isResizing = ref(false);
+const initialResizeDirection = ref(null); // 처음 클릭한 리사이즈 방향 저장
+const resizeDirection = ref(null);
+const resizeStart = reactive({ x: 0, y: 0, width: 0, height: 0, posX: 0, posY: 0 });
+
+const buffer = 10; // 감지 영역을 20px로 설정
+
+const toggleMinimized = () => {
+  windowStore.toggleMinimized('blog');
 };
 
-// 최대화
-const handleMaximize = () => {
-  const window = document.getElementById("resize-drag");
-  if (maximized.value) {
-    // 최대화 상태 해제
-    window.style.width = "500px";
-    window.style.height = "auto";
-    window.style.transform = "translate(0px, 0px)";
-    maximized.value = false;
+const toggleMaximized = () => {
+  if (windowData.value.maximized) {
+    size.width = 500;
+    size.height = 300;
+    position.x = 0;
+    position.y = 0;
   } else {
-    // 최대화
-    window.style.width = "100vw";
-    window.style.height = "100vh";
-    window.style.transform = "translate(0, 0)";
-    maximized.value = true;
+    size.width = window.innerWidth;
+    size.height = window.innerHeight;
+    position.x = 0;
+    position.y = 0;
   }
-  console.log(`Window ${maximized.value ? "maximized" : "restored"}`);
+  windowStore.toggleMaximized('blog');
 };
 
-// 닫기
-const handleClose = () => {
-  const window = document.getElementById("resize-drag");
-  window.style.display = "none";
-  console.log("Window closed");
+const closeWindow = () => {
+  windowStore.closeWindow('blog');
 };
 
-onMounted(() => {
-  interact("#resize-drag")
-    .resizable({
-      edges: { left: true, right: true, bottom: true, top: true },
-      listeners: {
-        move(event) {
-          const target = event.target;
-          let x = parseFloat(target.getAttribute("data-x")) || 0;
-          let y = parseFloat(target.getAttribute("data-y")) || 0;
+const checkResizeCursor = (event) => {
+  const rect = event.currentTarget.getBoundingClientRect();
 
-          target.style.width = event.rect.width + "px";
-          target.style.height = event.rect.height + "px";
+  const isTop = event.clientY >= rect.top - buffer && event.clientY <= rect.top + buffer;
+  const isBottom = event.clientY >= rect.bottom - buffer && event.clientY <= rect.bottom + buffer;
+  const isLeft = event.clientX >= rect.left - buffer && event.clientX <= rect.left + buffer;
+  const isRight = event.clientX >= rect.right - buffer && event.clientX <= rect.right + buffer;
 
-          x += event.deltaRect.left;
-          y += event.deltaRect.top;
+  if (isTop && isLeft) {
+    resizeDirection.value = 'top-left';
+    event.currentTarget.style.cursor = 'nw-resize';
+  } else if (isTop && isRight) {
+    resizeDirection.value = 'top-right';
+    event.currentTarget.style.cursor = 'ne-resize';
+  } else if (isBottom && isLeft) {
+    resizeDirection.value = 'bottom-left';
+    event.currentTarget.style.cursor = 'sw-resize';
+  } else if (isBottom && isRight) {
+    resizeDirection.value = 'bottom-right';
+    event.currentTarget.style.cursor = 'se-resize';
+  } else if (isTop) {
+    resizeDirection.value = 'top';
+    event.currentTarget.style.cursor = 'n-resize';
+  } else if (isBottom) {
+    resizeDirection.value = 'bottom';
+    event.currentTarget.style.cursor = 's-resize';
+  } else if (isLeft) {
+    resizeDirection.value = 'left';
+    event.currentTarget.style.cursor = 'w-resize';
+  } else if (isRight) {
+    resizeDirection.value = 'right';
+    event.currentTarget.style.cursor = 'e-resize';
+  } else {
+    resetCursor(event);
+  }
+};
 
-          target.style.transform = `translate(${x}px, ${y}px)`;
-          target.setAttribute("data-x", x);
-          target.setAttribute("data-y", y);
-        },
-      },
-      modifiers: [
-        interact.modifiers.restrictSize({
-          min: { width: 100, height: 50 },
-        }),
-      ],
-    })
-    .draggable({
-      listeners: {
-        move(event) {
-          const target = event.target;
-          let x = parseFloat(target.getAttribute("data-x")) || 0;
-          let y = parseFloat(target.getAttribute("data-y")) || 0;
+const resetCursor = (event) => {
+  if (!isResizing.value) {
+    resizeDirection.value = null;
+    event.currentTarget.style.cursor = 'default';
+  }
+};
 
-          x += event.dx;
-          y += event.dy;
+const startDragOrResize = (event) => {
+  if (resizeDirection.value) {
+    initialResizeDirection.value = resizeDirection.value; // 처음 클릭한 방향을 저장
+    startResize(event);
+  } else {
+    startDrag(event);
+  }
+};
 
-          // y가 0px 이상으로만 이동하도록 제한
-          if (y < 0) y = 0;
+const startDrag = (event) => {
+  if (isResizing.value) return;
+  isDragging.value = true;
+  resizeStart.x = event.clientX - position.x;
+  resizeStart.y = event.clientY - position.y;
 
-          target.style.transform = `translate(${x}px, ${y}px)`;
-          target.setAttribute("data-x", x);
-          target.setAttribute("data-y", y);
-        },
-      },
-    });
-});
+  document.addEventListener('mousemove', onDrag);
+  document.addEventListener('mouseup', stopDrag);
+};
+
+const onDrag = (event) => {
+  if (isDragging.value) {
+    position.x = event.clientX - resizeStart.x;
+    position.y = event.clientY - resizeStart.y;
+  }
+};
+
+const stopDrag = () => {
+  isDragging.value = false;
+  document.removeEventListener('mousemove', onDrag);
+  document.removeEventListener('mouseup', stopDrag);
+};
+
+const startResize = (event) => {
+  isResizing.value = true;
+  resizeStart.x = event.clientX;
+  resizeStart.y = event.clientY;
+  resizeStart.width = size.width;
+  resizeStart.height = size.height;
+  resizeStart.posX = position.x;
+  resizeStart.posY = position.y;
+
+  document.addEventListener('mousemove', onResize);
+  document.addEventListener('mouseup', stopResize);
+};
+
+const onResize = (event) => {
+  const dx = event.clientX - resizeStart.x;
+  const dy = event.clientY - resizeStart.y;
+
+  // 처음 클릭한 방향에 따라 리사이즈 계산
+  switch (initialResizeDirection.value) {
+    case 'right':
+      size.width = Math.max(200, resizeStart.width + dx);
+      break;
+    case 'left':
+      size.width = Math.max(200, resizeStart.width - dx);
+      position.x = resizeStart.posX + dx;
+      break;
+    case 'bottom':
+      size.height = Math.max(150, resizeStart.height + dy);
+      break;
+    case 'top':
+      size.height = Math.max(150, resizeStart.height - dy);
+      position.y = resizeStart.posY + dy;
+      break;
+    case 'top-left':
+      size.width = Math.max(200, resizeStart.width - dx);
+      position.x = resizeStart.posX + dx;
+      size.height = Math.max(150, resizeStart.height - dy);
+      position.y = resizeStart.posY + dy;
+      break;
+    case 'top-right':
+      size.width = Math.max(200, resizeStart.width + dx);
+      size.height = Math.max(150, resizeStart.height - dy);
+      position.y = resizeStart.posY + dy;
+      break;
+    case 'bottom-left':
+      size.width = Math.max(200, resizeStart.width - dx);
+      position.x = resizeStart.posX + dx;
+      size.height = Math.max(150, resizeStart.height + dy);
+      break;
+    case 'bottom-right':
+      size.width = Math.max(200, resizeStart.width + dx);
+      size.height = Math.max(150, resizeStart.height + dy);
+      break;
+  }
+};
+
+const stopResize = () => {
+  isResizing.value = false;
+  initialResizeDirection.value = null; // 초기 방향 초기화
+  document.removeEventListener('mousemove', onResize);
+  document.removeEventListener('mouseup', stopResize);
+};
 </script>
+
+
 
 
 <style scoped>
 .resize-drag {
-  width: 500px;
+  position: absolute;
   background-color: #f7f7f7;
   border-radius: 8px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
   overflow: hidden;
-  z-index: 2;
   touch-action: none;
   box-sizing: border-box;
 }
@@ -120,30 +216,22 @@ onMounted(() => {
 .window-header {
   display: flex;
   justify-content: center;
-  /* 제목을 중앙 정렬 */
   align-items: center;
   padding: 8px 12px;
   background-color: #2b2b2b;
   border-bottom: 1px solid #d6d6d6;
   position: relative;
-  /* 컨트롤 버튼을 절대 위치로 배치하기 위해 상대 위치 설정 */
 }
 
 .window-title {
-  margin: 0;
   font-size: 14px;
   font-weight: bold;
   color: #d6d6d6;
-  text-align: center;
-  /* 제목 텍스트 가운데 정렬 */
 }
 
 .window-controls {
-  display: flex;
   position: absolute;
-  /* 왼쪽으로 고정 */
   left: 12px;
-  /* 왼쪽 여백 */
 }
 
 .window-minimize,
@@ -187,7 +275,6 @@ onMounted(() => {
 
 .window-content {
   padding: 12px;
-  background: #f7f7f7;
-  color: #333333;
+  color: #333;
 }
 </style>
