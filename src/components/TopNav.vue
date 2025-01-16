@@ -27,14 +27,13 @@ dayjs.locale('ko');
 
 const time = ref('');
 const date = ref('');
+const days = ['[일]', '[월]', '[화]', '[수]', '[목]', '[금]', '[토]']; // 요일 축약형 배열
 
 onMounted(() => {
   setInterval(() => {
-    time.value = dayjs().format('hh:mm A'); // 시간 형식
-  }, 1000);
-
-  setInterval(() => {
-    date.value = dayjs().format('YYYY년 MM월 DD일 dddd'); // "년도 월 일 요일" 형식
+    const now = dayjs();
+    time.value = dayjs().format('A hh:mm'); // 시간 형식
+    date.value = `${now.format('YYYY-MM-DD')} ${days[now.day()]}`; // 날짜와 요일 축약형
   }, 1000);
 });
 </script>
@@ -86,8 +85,7 @@ onMounted(() => {
 .text-right {
   font-size: 14px;
   font-weight: 500;
-  margin-left: 7px;
-  margin-right: 7px;
+  margin-right: 5px;
 }
 
 .bold {

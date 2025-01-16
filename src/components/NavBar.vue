@@ -1,128 +1,177 @@
 <template>
-  <nav class="dock" @mousemove="handleMouseMove" @mouseleave="resetDock">
-    <div v-for="(item, index) in items" :key="index" class="item" :style="{ width: itemWidths[index] + 'px' }">
-      <img :src="item.icon" :alt="item.name" />
-      <p>{{ item.name }}</p>
+  <div class="dock">
+    <div class="dock-container">
+      <li v-for="(icon, index) in icons" :key="index" :class="`li-${index + 1}`" class="dock-item"
+        @mouseover="focus(index)" @mouseleave="resetIcons" @click="handleClick(icon)">
+        <div class="name">{{ icon.name }}</div>
+        <img class="ico" :src="icon.src" alt="" ref="dockIcons" />
+      </li>
     </div>
-  </nav>
+  </div>
 </template>
 
+
+
 <script setup>
-import { ref, reactive } from "vue";
+import { useWindowStore } from "@/stores/WindowStore";
+import { ref } from "vue";
+import notionIcon from "@/assets/navbar/notion.png";
 
-// 최소/최대 너비와 확장 스텝 설정
-const MIN_WIDTH = 60;
-const MAX_WIDTH = 80; // 확대될 최대 너비
-const STEP = 5; // 확대/축소 속도
+// Pinia 스토어
+const windowStore = useWindowStore();
 
-// 아이템 데이터
-const items = ref([
-  { name: "Finder", icon: "https://upload.wikimedia.org/wikipedia/en/9/98/FinderBigSur.png" },
-  { name: "Premiere Pro", icon: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Adobe_Premiere_Pro_CC_icon.svg/240px-Adobe_Premiere_Pro_CC_icon.svg.png" },
-  { name: "Setting", icon: "https://upload.wikimedia.org/wikipedia/en/2/23/System_Preferences_icon.png" },
-  { name: "Safari", icon: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Safari_browser_logo.svg/2057px-Safari_browser_logo.svg.png" },
-  { name: "Instagram", icon: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Instagram_logo_2016.svg/480px-Instagram_logo_2016.svg.png" },
+// 아이콘 데이터
+const icons = ref([
+  { name: "blog", src: notionIcon },
+  { name: "Premiere Pro", src: "https://uploads-ssl.webflow.com/5f7081c044fb7b3321ac260e/5f70853ff3bafbac60495771_siri.png" },
+  { name: "Settings", src: "https://uploads-ssl.webflow.com/5f7081c044fb7b3321ac260e/5f70853943597517f128b9b4_launchpad.png" },
 ]);
 
-// 아이템의 너비 상태 관리
-const itemWidths = reactive(new Array(items.value.length).fill(MIN_WIDTH));
+// Dock 아이콘 애니메이션 상태
+const dockIcons = ref([]);
 
-let aniID = null;
-
-// 확대/축소 너비를 업데이트하는 함수
-const updateWidths = (nextWidths) => {
-  cancelAnimationFrame(aniID); // 이전 애니메이션 중지
-  aniID = null;
-
-  let isAllDone = true;
-
-  // 각 아이템의 너비를 점진적으로 변경
-  for (let i = 0; i < itemWidths.length; i++) {
-    const currWidth = itemWidths[i];
-    const goalWidth = nextWidths[i];
-
-    if (goalWidth < currWidth) {
-      itemWidths[i] = Math.max(currWidth - STEP, goalWidth);
-      isAllDone = false;
-    } else if (goalWidth > currWidth) {
-      itemWidths[i] = Math.min(currWidth + STEP, goalWidth);
-      isAllDone = false;
-    }
-  }
-
-  if (!isAllDone) {
-    aniID = requestAnimationFrame(() => updateWidths(nextWidths));
-  }
-};
-
-// 마우스 이동 시 아이콘 크기 조정
-const handleMouseMove = (event) => {
-  const dockRect = event.currentTarget.getBoundingClientRect();
-  const mouseY = event.clientY - dockRect.top;
-
-  const nextWidths = items.value.map((_, index) => {
-    const itemCenter = index * MIN_WIDTH + MIN_WIDTH / 2;
-    const distance = Math.abs(itemCenter - mouseY);
-    return Math.max(MAX_WIDTH - distance / 4, MIN_WIDTH);
+// 아이콘 초기화
+const resetIcons = () => {
+  dockIcons.value.forEach((icon) => {
+    icon.style.transform = "scale(1) translateY(0px)";
   });
-
-  updateWidths(nextWidths);
 };
 
-// 마우스가 도크를 벗어나면 아이콘 크기를 초기화
-const resetDock = () => {
-  const nextWidths = new Array(items.value.length).fill(MIN_WIDTH);
-  updateWidths(nextWidths);
+// 아이콘 포커스 애니메이션
+const focus = (index) => {
+  resetIcons();
+  const transformations = [
+    { idx: index - 2, scale: 1.1, translateY: 0 },
+    { idx: index - 1, scale: 1.2, translateY: -6 },
+    { idx: index, scale: 1.5, translateY: -10 },
+    { idx: index + 1, scale: 1.2, translateY: -6 },
+    { idx: index + 2, scale: 1.1, translateY: 0 },
+  ];
+
+  transformations.forEach(({ idx, scale, translateY }) => {
+    if (dockIcons.value[idx]) {
+      dockIcons.value[idx].style.transform = `scale(${scale}) translateY(${translateY}px)`;
+    }
+  });
+};
+
+// 아이콘 클릭 핸들러
+const handleClick = (icon) => {
+  const window = windowStore.windows.find((win) => win.name === icon.name);
+
+  if (window) {
+
+    windowStore.toggleMinimized(icon.name);
+  }
 };
 </script>
 
 
-
-
 <style scoped>
-.dock {
-  position: absolute;
-  left: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 50px;
-  padding: 10px 5px;
-  border-radius: 14px;
-  background-color: rgb(36 36 36);
-  border: 1px solid #565656;
-  box-shadow: 0px 0px 0px 1px 3f3f3f;
+*,
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: "San Francisco";
 }
 
-.item {
-  position: relative;
-  transition: width 0.2s ease;
+@font-face {
+  font-family: "San Francisco";
+  font-weight: 400;
+  src: url("https://applesocial.s3.amazonaws.com/assets/styles/fonts/sanfrancisco/sanfranciscodisplay-regular-webfont.woff");
 }
 
-.item img {
-  width: 100%;
-}
-
-.item p {
-  display: none;
-  position: absolute;
-  top: 50%;
-  left: 100%;
-  transform: translateY(-50%);
-  margin: 0 0 0 5px;
-  padding: 3px 10px;
-  background: #333;
-  border-radius: 6px;
-  border: 1px solid #565656;
-  box-shadow: 0px 0px 0px 1px 3f3f3f;
-  white-space: nowrap;
-  color: #ddd;
-}
-
-.item:hover p {
-  display: block;
+@font-face {
+  font-family: "San Francisco";
+  font-weight: 800;
+  src: url("https://applesocial.s3.amazonaws.com/assets/styles/fonts/sanfrancisco/sanfranciscodisplay-bold-webfont.woff");
 }
 
 body {
-  background-image: url(https://512pixels.net/downloads/macos-wallpapers-thumbs/10-14-Night-Thumb.jpg);
+  background: url(https://uhdwallpapers.org/uploads/converted/20/06/25/macos-big-sur-wwdc-2560x1440_785884-mm-90.jpg);
+}
+
+.dock {
+  width: auto;
+  height: 60px;
+  border-radius: 16px;
+  display: flex;
+  justify-content: center;
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.dock-container {
+  padding: 3px;
+  width: auto;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  background: rgba(83, 83, 83, 0.25);
+  backdrop-filter: blur(13px);
+  -webkit-backdrop-filter: blur(13px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.dock-item {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  vertical-align: bottom;
+  transition: 0.2s;
+  transform-origin: 50% 100%;
+}
+
+.dock-item:hover {
+  margin: 0px 13px 0px 13px;
+}
+
+.name {
+  position: absolute;
+  top: -55px;
+  background: rgba(0, 0, 0, 0.5);
+  color: rgba(255, 255, 255, 0.9);
+  height: 10px;
+  padding: 10px 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  visibility: hidden;
+}
+
+.name::after {
+  content: "";
+  position: absolute;
+  bottom: -10px;
+  width: 0;
+  height: 0;
+  backdrop-filter: blur(13px);
+  -webkit-backdrop-filter: blur(13px);
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 10px solid rgba(0, 0, 0, 0.5);
+}
+
+.dock-item:hover .name {
+  visibility: visible !important;
+}
+
+.ico {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: 0.2s;
+  display: inline-block;
+  transition: transform 0.3s ease;
 }
 </style>

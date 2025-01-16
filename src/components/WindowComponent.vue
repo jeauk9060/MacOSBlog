@@ -1,10 +1,10 @@
 <template>
-  <div id="resize-drag" class="resize-drag">
+  <div id="resize-drag" class="resize-drag" v-show="!minimized">
     <div class="window-header">
       <div class="window-controls">
-        <button class="window-minimize"></button>
-        <button class="window-maximize"></button>
-        <button class="window-close"></button>
+        <button class="window-close" @click="handleClose"></button>
+        <button class="window-minimize" @click="handleMinimize"></button>
+        <button class="window-maximize" @click="handleMaximize"></button>
       </div>
       <div class="window-title">제목</div>
     </div>
@@ -14,9 +14,46 @@
   </div>
 </template>
 
+
 <script setup>
-import { onMounted } from "vue";
+import { ref, onMounted } from "vue";
 import interact from "interactjs";
+
+// 창 상태 관리
+const minimized = ref(false);
+const maximized = ref(false);
+
+// 최소화
+const handleMinimize = () => {
+  minimized.value = true; // 창 전체를 숨김
+  console.log("Window minimized");
+};
+
+// 최대화
+const handleMaximize = () => {
+  const window = document.getElementById("resize-drag");
+  if (maximized.value) {
+    // 최대화 상태 해제
+    window.style.width = "500px";
+    window.style.height = "auto";
+    window.style.transform = "translate(0px, 0px)";
+    maximized.value = false;
+  } else {
+    // 최대화
+    window.style.width = "100vw";
+    window.style.height = "100vh";
+    window.style.transform = "translate(0, 0)";
+    maximized.value = true;
+  }
+  console.log(`Window ${maximized.value ? "maximized" : "restored"}`);
+};
+
+// 닫기
+const handleClose = () => {
+  const window = document.getElementById("resize-drag");
+  window.style.display = "none";
+  console.log("Window closed");
+};
 
 onMounted(() => {
   interact("#resize-drag")
@@ -55,7 +92,7 @@ onMounted(() => {
           x += event.dx;
           y += event.dy;
 
-          // y가 30px 이상으로만 이동하도록 제한
+          // y가 0px 이상으로만 이동하도록 제한
           if (y < 0) y = 0;
 
           target.style.transform = `translate(${x}px, ${y}px)`;
@@ -66,6 +103,7 @@ onMounted(() => {
     });
 });
 </script>
+
 
 <style scoped>
 .resize-drag {
