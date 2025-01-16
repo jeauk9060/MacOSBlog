@@ -2,9 +2,9 @@
   <div id="resize-drag" class="resize-drag">
     <div class="window-header">
       <div class="window-controls">
-        <div class="window-minimize"></div>
-        <div class="window-maximize"></div>
-        <div class="window-close"></div>
+        <button class="window-minimize"></button>
+        <button class="window-maximize"></button>
+        <button class="window-close"></button>
       </div>
       <div class="window-title">제목</div>
     </div>
@@ -70,7 +70,7 @@ onMounted(() => {
 <style scoped>
 .resize-drag {
   width: 500px;
-  background-color: #ffffff;
+  background-color: #f7f7f7;
   border-radius: 8px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
   overflow: hidden;
@@ -85,7 +85,7 @@ onMounted(() => {
   /* 제목을 중앙 정렬 */
   align-items: center;
   padding: 8px 12px;
-  background-color: #e6e6e6;
+  background-color: #2b2b2b;
   border-bottom: 1px solid #d6d6d6;
   position: relative;
   /* 컨트롤 버튼을 절대 위치로 배치하기 위해 상대 위치 설정 */
@@ -95,6 +95,7 @@ onMounted(() => {
   margin: 0;
   font-size: 14px;
   font-weight: bold;
+  color: #d6d6d6;
   text-align: center;
   /* 제목 텍스트 가운데 정렬 */
 }
@@ -113,93 +114,42 @@ onMounted(() => {
   width: 12px;
   height: 12px;
   margin-right: 8px;
-  /* 버튼 간격 유지 */
-  border-radius: 50%;
+  background-size: cover;
+  /* 이미지가 컨테이너를 완전히 채우도록 설정 */
+  background-position: center;
+  /* 이미지를 중앙에 배치 */
+  background-repeat: no-repeat;
+  /* 반복 방지 */
 }
 
 .window-minimize {
-  background-color: #f7d54a;
+  background-image: url('../assets/yellow.webp');
 }
 
+.window-minimize:hover {
+  background-image: url('../assets/yellow_h.webp');
+}
+
+
 .window-maximize {
-  background-color: #62c462;
+  background-image: url('../assets/green.webp');
+}
+
+.window-maximize:hover {
+  background-image: url('../assets/green_h.webp');
 }
 
 .window-close {
-  background-color: #ee5f5b;
+  background-image: url('../assets/red.webp');
+}
+
+.window-close:hover {
+  background-image: url('../assets/red_h.webp');
 }
 
 .window-content {
   padding: 12px;
-  background: white;
-}
-
-@media (prefers-color-scheme: dark) {
-  .resize-drag {
-    background-color: #2b2b2b;
-    /* 창 배경 */
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
-    /* 진한 그림자 */
-  }
-
-  .window-header {
-    background-color: #000000;
-    /* 헤더 배경 */
-    border-bottom: 1px solid #444;
-    /* 헤더 테두리 */
-  }
-
-  .window-title {
-    color: #ffffff;
-    /* 제목 텍스트 */
-  }
-
-  .window-controls .window-minimize {
-    background-color: #f4c542;
-    /* 노란색 */
-  }
-
-  .window-controls .window-maximize {
-    background-color: #3fcf4e;
-    /* 초록색 */
-  }
-
-  .window-controls .window-close {
-    background-color: #f25353;
-    /* 빨간색 */
-  }
-
-  .window-content {
-    background: #2b2b2b;
-    /* 콘텐츠 배경 */
-    color: #d4d4d4;
-    /* 콘텐츠 텍스트 */
-  }
-
-  /* 추가적으로 스타일링이 필요한 클래스 */
-  .about-me {
-    border: 1px solid #0B0A0B;
-    background: #1C1C1D;
-  }
-
-  .top-bar {
-    background: #333333;
-  }
-
-  .bar {
-    background: #0B0A0B;
-  }
-
-  .hello,
-  .header,
-  .paragraph,
-  .heading {
-    color: white;
-  }
-
-  .textarea-content {
-    caret-color: white;
-    color: white;
-  }
+  background: #f7f7f7;
+  color: #333333;
 }
 </style>
