@@ -1,10 +1,24 @@
 <template>
+  <!--
+  1. `v-show`: 창이 최소화되거나 닫히지 않은 상태에서만 표시.
+  2. `style` 바인딩:
+     - `transform`: 창의 현재 위치를 동적으로 설정.
+     - `width`, `height`: 창의 크기를 동적으로 설정.
+  3. 이벤트 핸들러:
+     - `@mousemove`: 마우스 움직임에 따라 커서 모양 및 리사이즈 방향 확인.
+     - `@mousedown`: 마우스 클릭 시 드래그 또는 리사이즈 동작 시작.
+     - `@mouseleave`: 마우스가 창을 벗어나면 커서를 초기화.
+  4. `window-header`:
+     - 창 제어 버튼 (`닫기`, `최소화`, `최대화`)과 창 제목 포함.
+  5. `window-content`:
+     - 창의 내용 표시.
+  -->
   <div id="resize-drag" class="resize-drag" v-show="!windowData.minimized && !windowData.closed" :style="{
     transform: `translate(${position.x}px, ${position.y}px)`,
     width: size.width + 'px',
     height: size.height + 'px',
-  }" @mousemove="checkResizeCursor" @mousedown="startDragOrResize" @mouseleave="resetCursor">
-    <div class="window-header">
+  }" @mousemove="checkResizeCursor" @mousedown="startResizeSave" @mouseleave="resetCursor">
+    <div class="window-header" @mousemove="checkResizeCursor" @mousedown="startDragOrResize" @mouseleave="resetCursor">
       <div class="window-controls">
         <button class="window-close" @click="closeWindow"></button>
         <button class="window-minimize" @click="toggleMinimized"></button>
@@ -18,29 +32,39 @@
   </div>
 </template>
 
+
 <script setup>
+// Vue 및 관련 라이브러리에서 필요한 기능 임포트
 import { useWindowStore } from '@/stores/WindowStore';
 import { ref, reactive, computed } from 'vue';
 
+// WindowStore를 사용하여 'blog' 윈도우 데이터 가져오기
 const windowStore = useWindowStore();
 const windowData = computed(() => windowStore.windows.find(win => win.name === 'blog'));
 
+// 윈도우의 위치와 크기를 저장하는 반응형 객체
 const position = reactive({ x: 0, y: 0 });
 const size = reactive({ width: 500, height: 300 });
 
+// 드래그 및 리사이즈 상태를 추적
 const isDragging = ref(false);
 const isResizing = ref(false);
-const initialResizeDirection = ref(null); // 처음 클릭한 리사이즈 방향 저장
+
+// 리사이즈 방향과 초기 상태를 추적
+const initialResizeDirection = ref(null); // 리사이즈 시작 시 방향
 const resizeDirection = ref(null);
 const resizeStart = reactive({ x: 0, y: 0, width: 0, height: 0, posX: 0, posY: 0 });
 
-const buffer = 10; // 감지 영역을 20px로 설정
+// 리사이즈 감지 영역의 범위 설정
+const buffer = 10;
 
+// 윈도우 최소화/최대화/닫기 동작
 const toggleMinimized = () => {
-  windowStore.toggleMinimized('blog');
+  windowStore.toggleMinimized('blog'); // 최소화 상태 토글
 };
 
 const toggleMaximized = () => {
+  // 최대화 여부에 따라 크기 및 위치 설정
   if (windowData.value.maximized) {
     size.width = 500;
     size.height = 300;
@@ -52,21 +76,24 @@ const toggleMaximized = () => {
     position.x = 0;
     position.y = 0;
   }
-  windowStore.toggleMaximized('blog');
+  windowStore.toggleMaximized('blog'); // 최대화 상태 토글
 };
 
 const closeWindow = () => {
-  windowStore.closeWindow('blog');
+  windowStore.closeWindow('blog'); // 윈도우 닫기
 };
 
+// 마우스 위치에 따라 리사이즈 방향 설정
 const checkResizeCursor = (event) => {
   const rect = event.currentTarget.getBoundingClientRect();
 
+  // 감지 영역 내에서 방향을 결정
   const isTop = event.clientY >= rect.top - buffer && event.clientY <= rect.top + buffer;
   const isBottom = event.clientY >= rect.bottom - buffer && event.clientY <= rect.bottom + buffer;
   const isLeft = event.clientX >= rect.left - buffer && event.clientX <= rect.left + buffer;
   const isRight = event.clientX >= rect.right - buffer && event.clientX <= rect.right + buffer;
 
+  // 각 방향에 맞는 커서와 리사이즈 방향 설정
   if (isTop && isLeft) {
     resizeDirection.value = 'top-left';
     event.currentTarget.style.cursor = 'nw-resize';
@@ -92,10 +119,11 @@ const checkResizeCursor = (event) => {
     resizeDirection.value = 'right';
     event.currentTarget.style.cursor = 'e-resize';
   } else {
-    resetCursor(event);
+    resetCursor(event); // 커서 초기화
   }
 };
 
+// 커서를 기본값으로 리셋
 const resetCursor = (event) => {
   if (!isResizing.value) {
     resizeDirection.value = null;
@@ -103,25 +131,37 @@ const resetCursor = (event) => {
   }
 };
 
+// 드래그 또는 리사이즈 동작 시작
 const startDragOrResize = (event) => {
   if (resizeDirection.value) {
-    initialResizeDirection.value = resizeDirection.value; // 처음 클릭한 방향을 저장
-    startResize(event);
+    initialResizeDirection.value = resizeDirection.value; // 방향 저장
+    startResize(event); // 리사이즈 시작
   } else {
-    startDrag(event);
+    startDrag(event); // 드래그 시작
   }
 };
 
+// 드래그 또는 리사이즈 동작 시작
+const startResizeSave = (event) => {
+  if (resizeDirection.value) {
+    initialResizeDirection.value = resizeDirection.value; // 방향 저장
+    startResize(event); // 리사이즈 시작
+  }
+};
+
+// 드래그 시작
 const startDrag = (event) => {
-  if (isResizing.value) return;
-  isDragging.value = true;
+  if (isResizing.value) return; // 리사이즈 중이면 드래그 중단
+  isDragging.value = true; // 드래그 상태 활성화
   resizeStart.x = event.clientX - position.x;
   resizeStart.y = event.clientY - position.y;
 
+  // 드래그 이벤트 리스너 추가
   document.addEventListener('mousemove', onDrag);
   document.addEventListener('mouseup', stopDrag);
 };
 
+// 드래그 동작
 const onDrag = (event) => {
   if (isDragging.value) {
     position.x = event.clientX - resizeStart.x;
@@ -129,12 +169,14 @@ const onDrag = (event) => {
   }
 };
 
+// 드래그 종료
 const stopDrag = () => {
   isDragging.value = false;
   document.removeEventListener('mousemove', onDrag);
   document.removeEventListener('mouseup', stopDrag);
 };
 
+// 리사이즈 시작
 const startResize = (event) => {
   isResizing.value = true;
   resizeStart.x = event.clientX;
@@ -144,15 +186,17 @@ const startResize = (event) => {
   resizeStart.posX = position.x;
   resizeStart.posY = position.y;
 
+  // 리사이즈 이벤트 리스너 추가
   document.addEventListener('mousemove', onResize);
   document.addEventListener('mouseup', stopResize);
 };
 
+// 리사이즈 동작
 const onResize = (event) => {
-  const dx = event.clientX - resizeStart.x;
-  const dy = event.clientY - resizeStart.y;
+  const dx = event.clientX - resizeStart.x; // X축 변화량
+  const dy = event.clientY - resizeStart.y; // Y축 변화량
 
-  // 처음 클릭한 방향에 따라 리사이즈 계산
+  // 각 방향에 따른 리사이즈 계산
   switch (initialResizeDirection.value) {
     case 'right':
       size.width = Math.max(200, resizeStart.width + dx);
@@ -191,6 +235,7 @@ const onResize = (event) => {
   }
 };
 
+// 리사이즈 종료
 const stopResize = () => {
   isResizing.value = false;
   initialResizeDirection.value = null; // 초기 방향 초기화

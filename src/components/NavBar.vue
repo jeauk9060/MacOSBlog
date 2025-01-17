@@ -100,7 +100,7 @@ body {
   display: flex;
   justify-content: center;
   position: absolute;
-  bottom: 20px;
+  bottom: 5px;
   left: 50%;
   transform: translateX(-50%);
 }
