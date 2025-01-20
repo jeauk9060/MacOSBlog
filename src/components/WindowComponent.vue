@@ -1,18 +1,4 @@
 <template>
-  <!--
-  1. `v-show`: 창이 최소화되거나 닫히지 않은 상태에서만 표시.
-  2. `style` 바인딩:
-     - `transform`: 창의 현재 위치를 동적으로 설정.
-     - `width`, `height`: 창의 크기를 동적으로 설정.
-  3. 이벤트 핸들러:
-     - `@mousemove`: 마우스 움직임에 따라 커서 모양 및 리사이즈 방향 확인.
-     - `@mousedown`: 마우스 클릭 시 드래그 또는 리사이즈 동작 시작.
-     - `@mouseleave`: 마우스가 창을 벗어나면 커서를 초기화.
-  4. `window-header`:
-     - 창 제어 버튼 (`닫기`, `최소화`, `최대화`)과 창 제목 포함.
-  5. `window-content`:
-     - 창의 내용 표시.
-  -->
   <div id="resize-drag" class="resize-drag" v-show="!windowData.minimized && !windowData.closed" :style="{
     transform: `translate(${position.x}px, ${position.y}px)`,
     width: size.width + 'px',
@@ -24,10 +10,10 @@
         <button class="window-minimize" @click="toggleMinimized"></button>
         <button class="window-maximize" @click="toggleMaximized"></button>
       </div>
-      <div class="window-title">{{ windowData.name }}</div>
+      <div class="window-title">제목</div>
     </div>
     <div class="window-content">
-      <p>{{ windowData.content }}</p>
+      <p>내용</p>
     </div>
   </div>
 </template>
@@ -37,6 +23,17 @@
 // Vue 및 관련 라이브러리에서 필요한 기능 임포트
 import { useWindowStore } from '@/stores/WindowStore';
 import { ref, reactive, computed } from 'vue';
+import { useNotionStore } from '@/stores/notionStore';
+import { onMounted } from 'vue';
+
+const notionStore = useNotionStore();
+
+onMounted(async () => {
+  // 최신순(내림차순) 데이터 가져오기
+  const data = await notionStore.fetchDatabase('descending'); // ascending으로 변경 가능
+  console.log('Notion Data:', data);
+});
+
 
 // WindowStore를 사용하여 'blog' 윈도우 데이터 가져오기
 const windowStore = useWindowStore();

@@ -2,7 +2,9 @@
   "compilerOptions": {
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+    "allowJs": true, // JavaScript 파일 허용
+    "checkJs": false // JavaScript 파일에서 타입 검사 비활성화
   },
   "exclude": ["node_modules", "dist"]
 }

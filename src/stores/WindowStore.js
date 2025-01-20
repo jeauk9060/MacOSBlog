@@ -8,24 +8,18 @@ export const useWindowStore = defineStore('window', {
         minimized: false, // 최소화 여부
         maximized: false, // 최대화 여부
         closed: false, // 닫힘 여부
-        content: 'This is blog content.', // 창의 내용
-        defaultContent: 'This is blog content.', // 초기화 시 기본 내용
       },
       {
         name: 'Premiere Pro',
         minimized: false,
         maximized: false,
         closed: false,
-        content: 'Premiere Pro is active.',
-        defaultContent: 'Premiere Pro is active.',
       },
       {
         name: 'Settings',
         minimized: false,
         maximized: false,
         closed: false,
-        content: 'System settings.',
-        defaultContent: 'System settings.',
       },
     ],
   }),
