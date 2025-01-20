@@ -23,7 +23,7 @@
 // Vue 및 관련 라이브러리에서 필요한 기능 임포트
 import { useWindowStore } from '@/stores/WindowStore';
 import { ref, reactive, computed } from 'vue';
-import { useNotionStore } from '@/stores/notionStore';
+import { useNotionStore } from '@/stores/NotionStore.js'
 import { onMounted } from 'vue';
 
 const notionStore = useNotionStore();
