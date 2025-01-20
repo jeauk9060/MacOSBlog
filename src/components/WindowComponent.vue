@@ -23,17 +23,6 @@
 // Vue 및 관련 라이브러리에서 필요한 기능 임포트
 import { useWindowStore } from '@/stores/WindowStore';
 import { ref, reactive, computed } from 'vue';
-import { useNotionStore } from '@/stores/NotionStore.js'
-import { onMounted } from 'vue';
-
-const notionStore = useNotionStore();
-
-onMounted(async () => {
-  // 최신순(내림차순) 데이터 가져오기
-  const data = await notionStore.fetchDatabase('descending'); // ascending으로 변경 가능
-  console.log('Notion Data:', data);
-});
-
 
 // WindowStore를 사용하여 'blog' 윈도우 데이터 가져오기
 const windowStore = useWindowStore();
