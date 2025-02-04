@@ -13,7 +13,7 @@
       <div class="window-title">제목</div>
     </div>
     <div class="window-content">
-      <p>내용 들어갈 칸</p>
+      <MainNotion />
     </div>
   </div>
 </template>
@@ -23,6 +23,7 @@
 // Vue 및 관련 라이브러리에서 필요한 기능 임포트
 import { useWindowStore } from '@/stores/WindowStore';
 import { ref, reactive, computed } from 'vue';
+import MainNotion from './content/MainNotion.vue';
 
 // WindowStore를 사용하여 'blog' 윈도우 데이터 가져오기
 const windowStore = useWindowStore();
@@ -305,6 +306,8 @@ const stopResize = () => {
 }
 
 .window-content {
+  overflow: auto;
+  max-height: calc(100% - 40px);
   padding: 12px;
   color: #333;
 }
