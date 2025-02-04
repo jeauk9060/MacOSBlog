@@ -10,10 +10,10 @@
         <button class="window-minimize" @click="toggleMinimized"></button>
         <button class="window-maximize" @click="toggleMaximized"></button>
       </div>
-      <div class="window-title">제목</div>
+      <div class="window-title">버그맛 커피</div>
     </div>
     <div class="window-content">
-      <MainNotion />
+      <slot></slot>
     </div>
   </div>
 </template>
@@ -23,7 +23,7 @@
 // Vue 및 관련 라이브러리에서 필요한 기능 임포트
 import { useWindowStore } from '@/stores/WindowStore';
 import { ref, reactive, computed } from 'vue';
-import MainNotion from './content/MainNotion.vue';
+
 
 // WindowStore를 사용하여 'blog' 윈도우 데이터 가져오기
 const windowStore = useWindowStore();
@@ -31,7 +31,7 @@ const windowData = computed(() => windowStore.windows.find(win => win.name === '
 
 // 윈도우의 위치와 크기를 저장하는 반응형 객체
 const position = reactive({ x: 0, y: 0 });
-const size = reactive({ width: 500, height: 300 });
+const size = reactive({ width: 850, height: 800 });
 
 // 드래그 및 리사이즈 상태를 추적
 const isDragging = ref(false);

@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 
 export const useWindowStore = defineStore('window', {
+
   state: () => ({
     windows: [
       {

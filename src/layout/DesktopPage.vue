@@ -3,16 +3,22 @@
     <TopNav />
     <v-main>
       <v-container fluid class="desktop-container">
-        <!-- Pinia 상태에 따라 동적으로 창 렌더링 -->
-        <WindowComponent v-for="window in windowStore.windows.filter(win => win.name === 'blog')" :key="window.name"
-          v-show="!window.minimized && !window.closed" :name="window.name" :maximized="window.maximized" />
-
+        <!-- 창 컴포넌트 -->
+        <WindowComponent
+          v-for="window in windowStore.windows.filter(win => win.name === 'blog')"
+          :key="window.name"
+          v-show="!window.minimized && !window.closed"
+          :name="window.name"
+          :maximized="window.maximized"
+        >
+          <!-- router-view를 WindowComponent 내부에 전달 -->
+          <router-view></router-view>
+        </WindowComponent>
       </v-container>
       <NavBar />
     </v-main>
   </v-app>
 </template>
-
 
 <script setup>
 import { useWindowStore } from "@/stores/WindowStore";
@@ -23,7 +29,6 @@ import WindowComponent from "@/components/WindowComponent.vue";
 // Pinia 스토어 사용
 const windowStore = useWindowStore();
 </script>
-
 
 <style scoped>
 .desktop-container {
