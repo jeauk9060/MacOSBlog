@@ -13,7 +13,7 @@
       <div class="window-title">제목</div>
     </div>
     <div class="window-content">
-      <p>내용</p>
+      <p>내용 들어갈 칸</p>
     </div>
   </div>
 </template>
