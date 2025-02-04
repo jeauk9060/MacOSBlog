@@ -60,10 +60,19 @@ const handleClick = (icon) => {
   const window = windowStore.windows.find((win) => win.name === icon.name);
 
   if (window) {
+    if (window.closed) {
+      window.closed = false; // 창을 다시 열기
+      window.minimized = false; // 최소화 해제
+      window.maximized = false; // 최대화 해제 (옵션)
+      return;
+    }
 
+    // 창이 닫혀있지 않다면 최소화 상태 토글
     windowStore.toggleMinimized(icon.name);
   }
 };
+
+
 </script>
 
 
