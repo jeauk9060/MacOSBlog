@@ -293,7 +293,7 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 8px 12px;
+  padding: 13px 17px;
   background-color: #2b2b2b;
   border-bottom: 1px solid #d6d6d6;
   position: relative;
@@ -337,15 +337,35 @@ onBeforeUnmount(() => {
   background-image: url('../assets/red_h.webp');
 }
 
-/* window-content 스타일 - cursor를 inherit로 변경하여 부모의 커서 스타일을 반영 */
+/* window-content 내부에서만 스크롤 허용 */
 .window-content {
+  margin: 3px;
   position: relative;
   z-index: 1;
-  overflow: auto;
-  max-height: calc(100% - 40px);
+  overflow: auto; /* 내부에서만 스크롤 가능 */
+  height: 100%; /* 부모 높이에 맞게 조정 */
+  max-height: calc(100% - 40px); /* 윈도우 헤더 제외 */
   padding: 12px;
   color: #333;
   user-select: text;
   cursor: inherit;
+  scrollbar-width: thin; /* Firefox에서 얇은 스크롤바 적용 */
+  scrollbar-color: rgba(0, 0, 0, 0.3) transparent; /* Firefox 스크롤바 색상 */
 }
+
+/* Chrome, Safari에서 스크롤바 디자인 */
+.window-content::-webkit-scrollbar {
+
+  width: 6px; /* 스크롤바 너비 */
+}
+
+.window-content::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.3); /* 스크롤바 색상 */
+  border-radius: 4px;
+}
+
+.window-content::-webkit-scrollbar-track {
+  background: transparent; /* 트랙 숨기기 */
+}
+
 </style>

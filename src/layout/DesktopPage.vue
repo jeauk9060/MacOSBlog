@@ -38,4 +38,5 @@ const windowStore = useWindowStore();
   background-color: gray;
   overflow: hidden;
 }
+
 </style>
