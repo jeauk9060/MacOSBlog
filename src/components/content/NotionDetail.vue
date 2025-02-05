@@ -31,7 +31,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import { useRoute } from "vue-router";
 import { NotionRenderer, getPageBlocks } from "vue-notion";
 
@@ -101,8 +101,20 @@ const fetchNotionData = async () => {
   }
 };
 
+// 컴포넌트가 처음 마운트될 때 데이터를 불러옵니다.
 onMounted(fetchNotionData);
+
+// route 파라미터가 변경될 때마다 fetchNotionData()를 재호출하여 화면 갱신을 수행합니다.
+watch(
+  () => route.params.index,
+  (newVal, oldVal) => {
+    if (newVal !== oldVal) {
+      fetchNotionData();
+    }
+  }
+);
 </script>
+
 
 <style>
 @import "vue-notion/src/styles.css";
