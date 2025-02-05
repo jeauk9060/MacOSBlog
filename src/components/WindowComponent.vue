@@ -10,13 +10,11 @@
       zIndex: windowData.zIndex
     }"
     @mousemove="checkResizeCursor"
-    @mousedown="startResizeOrDrag"
     @mouseleave="resetCursor"
+    @mousedown="handleMouseDown"
   >
-    <div class="window-header"
-         @mousemove="checkResizeCursor"
-         @mousedown="startResizeOrDrag"
-         @mouseleave="resetCursor">
+    <!-- window-header: 드래그 및 리사이즈 (헤더에서는 상단, 상단 대각(좌/우), 좌, 우 리사이즈 허용) -->
+    <div class="window-header">
       <div class="window-controls">
         <button class="window-close" @click.stop="closeWindow"></button>
         <button class="window-minimize" @click.stop="toggleMinimized"></button>
@@ -24,8 +22,8 @@
       </div>
       <div class="window-title">버그맛 커피</div>
     </div>
+    <!-- window-content -->
     <div class="window-content">
-      <!-- 창 내부 내용 또는 router-view (필요시 슬롯으로 전달) -->
       <slot></slot>
     </div>
   </div>
@@ -35,15 +33,15 @@
 import { computed, ref, onBeforeUnmount } from 'vue';
 import { useWindowStore } from '@/stores/WindowStore';
 
-// 여기서는 예시로 이름이 'blog'인 창을 선택합니다.
-// 실제 동적 생성 시 고유 id 또는 props로 전달받아 사용하도록 확장할 수 있습니다.
+const MIN_Y = 0;
+const buffer = 10; // 리사이즈 감지 영역 (픽셀)
+
 const windowStore = useWindowStore();
 const windowData = computed(() => windowStore.windows.find(win => win.name === 'blog'));
 
-// store에 저장된 위치와 크기를 computed getter/setter로 동기화합니다.
 const position = computed({
   get() {
-    return windowData.value?.position || { x: 0, y: 0 };
+    return windowData.value?.position || { x: 0, y: MIN_Y };
   },
   set(newPos) {
     if (windowData.value) {
@@ -62,7 +60,6 @@ const size = computed({
   }
 });
 
-// 드래그/리사이즈 관련 상태
 const isDragging = ref(false);
 const isResizing = ref(false);
 const initialResizeDirection = ref(null);
@@ -75,42 +72,62 @@ const resizeStart = {
   posX: 0,
   posY: 0,
 };
-const buffer = 10; // 리사이즈 감지 영역
 
-// 마우스 위치에 따라 리사이즈 커서 설정
 function checkResizeCursor(event) {
-  const rect = event.currentTarget.getBoundingClientRect();
-  const isTop = event.clientY >= rect.top - buffer && event.clientY <= rect.top + buffer;
-  const isBottom = event.clientY >= rect.bottom - buffer && event.clientY <= rect.bottom + buffer;
-  const isLeft = event.clientX >= rect.left - buffer && event.clientX <= rect.left + buffer;
-  const isRight = event.clientX >= rect.right - buffer && event.clientX <= rect.right + buffer;
-
-  if (isTop && isLeft) {
-    resizeDirection.value = 'top-left';
-    event.currentTarget.style.cursor = 'nw-resize';
-  } else if (isTop && isRight) {
-    resizeDirection.value = 'top-right';
-    event.currentTarget.style.cursor = 'ne-resize';
-  } else if (isBottom && isLeft) {
-    resizeDirection.value = 'bottom-left';
-    event.currentTarget.style.cursor = 'sw-resize';
-  } else if (isBottom && isRight) {
-    resizeDirection.value = 'bottom-right';
-    event.currentTarget.style.cursor = 'se-resize';
-  } else if (isTop) {
-    resizeDirection.value = 'top';
-    event.currentTarget.style.cursor = 'n-resize';
-  } else if (isBottom) {
-    resizeDirection.value = 'bottom';
-    event.currentTarget.style.cursor = 's-resize';
-  } else if (isLeft) {
-    resizeDirection.value = 'left';
-    event.currentTarget.style.cursor = 'w-resize';
-  } else if (isRight) {
-    resizeDirection.value = 'right';
-    event.currentTarget.style.cursor = 'e-resize';
+  let targetElement;
+  if (event.target.closest('.window-header')) {
+    targetElement = event.target.closest('.window-header');
   } else {
-    resetCursor(event);
+    targetElement = event.currentTarget;
+  }
+  const rect = targetElement.getBoundingClientRect();
+  const mouseX = event.clientX;
+  const mouseY = event.clientY;
+  const nearTop = mouseY - rect.top <= buffer;
+  const nearBottom = rect.bottom - mouseY <= buffer;
+  const nearLeft = mouseX - rect.left <= buffer;
+  const nearRight = rect.right - mouseX <= buffer;
+
+  if (targetElement.classList.contains('window-header')) {
+    if (nearTop && nearLeft) {
+      resizeDirection.value = 'top-left';
+      targetElement.style.cursor = 'nw-resize';
+    } else if (nearTop && nearRight) {
+      resizeDirection.value = 'top-right';
+      targetElement.style.cursor = 'ne-resize';
+    } else if (nearTop) {
+      resizeDirection.value = 'top';
+      targetElement.style.cursor = 'n-resize';
+    } else if (nearLeft) {
+      resizeDirection.value = 'left';
+      targetElement.style.cursor = 'w-resize';
+    } else if (nearRight) {
+      resizeDirection.value = 'right';
+      targetElement.style.cursor = 'e-resize';
+    } else {
+      resizeDirection.value = null;
+      targetElement.style.cursor = 'default';
+    }
+  } else {
+    if (nearBottom && nearLeft) {
+      resizeDirection.value = 'bottom-left';
+      targetElement.style.cursor = 'sw-resize';
+    } else if (nearBottom && nearRight) {
+      resizeDirection.value = 'bottom-right';
+      targetElement.style.cursor = 'se-resize';
+    } else if (nearBottom) {
+      resizeDirection.value = 'bottom';
+      targetElement.style.cursor = 's-resize';
+    } else if (nearLeft) {
+      resizeDirection.value = 'left';
+      targetElement.style.cursor = 'w-resize';
+    } else if (nearRight) {
+      resizeDirection.value = 'right';
+      targetElement.style.cursor = 'e-resize';
+    } else {
+      resizeDirection.value = null;
+      targetElement.style.cursor = 'default';
+    }
   }
 }
 
@@ -121,20 +138,16 @@ function resetCursor(event) {
   }
 }
 
-// 드래그 또는 리사이즈 동작 시작 (클릭 시 포커스 처리 포함)
-function startResizeOrDrag(event) {
-  if (windowData.value) {
-    windowStore.focusWindow(windowData.value.id);
-  }
+function handleMouseDown(event) {
+  const isHeader = event.target.closest('.window-header');
   if (resizeDirection.value) {
     initialResizeDirection.value = resizeDirection.value;
     startResize(event);
-  } else {
+  } else if (isHeader) {
     startDrag(event);
   }
 }
 
-// 드래그 시작
 function startDrag(event) {
   if (isResizing.value) return;
   isDragging.value = true;
@@ -142,27 +155,27 @@ function startDrag(event) {
   resizeStart.mouseY = event.clientY;
   resizeStart.posX = position.value.x;
   resizeStart.posY = position.value.y;
+  windowStore.focusWindow(windowData.value.id);
   document.addEventListener('mousemove', onDrag);
   document.addEventListener('mouseup', stopDrag);
 }
 
-// 드래그 동작 (store 업데이트)
 function onDrag(event) {
   if (isDragging.value) {
     const deltaX = event.clientX - resizeStart.mouseX;
     const deltaY = event.clientY - resizeStart.mouseY;
-    position.value = { x: resizeStart.posX + deltaX, y: resizeStart.posY + deltaY };
+    const newX = resizeStart.posX + deltaX;
+    const newY = Math.max(MIN_Y, resizeStart.posY + deltaY);
+    position.value = { x: newX, y: newY };
   }
 }
 
-// 드래그 종료
 function stopDrag() {
   isDragging.value = false;
   document.removeEventListener('mousemove', onDrag);
   document.removeEventListener('mouseup', stopDrag);
 }
 
-// 리사이즈 시작 (초기값 저장 후 이벤트 등록)
 function startResize(event) {
   isResizing.value = true;
   resizeStart.mouseX = event.clientX;
@@ -171,11 +184,11 @@ function startResize(event) {
   resizeStart.height = size.value.height;
   resizeStart.posX = position.value.x;
   resizeStart.posY = position.value.y;
+  windowStore.focusWindow(windowData.value.id);
   document.addEventListener('mousemove', onResize);
   document.addEventListener('mouseup', stopResize);
 }
 
-// 리사이즈 동작 (각 방향에 따라 크기/위치 업데이트)
 function onResize(event) {
   const dx = event.clientX - resizeStart.mouseX;
   const dy = event.clientY - resizeStart.mouseY;
@@ -195,21 +208,30 @@ function onResize(event) {
     case 'bottom':
       newHeight = Math.max(150, resizeStart.height + dy);
       break;
-    case 'top':
-      newHeight = Math.max(150, resizeStart.height - dy);
-      newY = resizeStart.posY + dy;
+    case 'top': {
+      const rawNewY = resizeStart.posY + dy;
+      newY = Math.max(MIN_Y, rawNewY);
+      const effectiveDy = newY - resizeStart.posY;
+      newHeight = Math.max(150, resizeStart.height - effectiveDy);
       break;
-    case 'top-left':
+    }
+    case 'top-left': {
+      const rawNewY = resizeStart.posY + dy;
+      newY = Math.max(MIN_Y, rawNewY);
+      const effectiveDy = newY - resizeStart.posY;
+      newHeight = Math.max(150, resizeStart.height - effectiveDy);
       newWidth = Math.max(200, resizeStart.width - dx);
       newX = resizeStart.posX + dx;
-      newHeight = Math.max(150, resizeStart.height - dy);
-      newY = resizeStart.posY + dy;
       break;
-    case 'top-right':
+    }
+    case 'top-right': {
+      const rawNewY = resizeStart.posY + dy;
+      newY = Math.max(MIN_Y, rawNewY);
+      const effectiveDy = newY - resizeStart.posY;
+      newHeight = Math.max(150, resizeStart.height - effectiveDy);
       newWidth = Math.max(200, resizeStart.width + dx);
-      newHeight = Math.max(150, resizeStart.height - dy);
-      newY = resizeStart.posY + dy;
       break;
+    }
     case 'bottom-left':
       newWidth = Math.max(200, resizeStart.width - dx);
       newX = resizeStart.posX + dx;
@@ -224,7 +246,6 @@ function onResize(event) {
   position.value = { x: newX, y: newY };
 }
 
-// 리사이즈 종료
 function stopResize() {
   isResizing.value = false;
   initialResizeDirection.value = null;
@@ -232,7 +253,6 @@ function stopResize() {
   document.removeEventListener('mouseup', stopResize);
 }
 
-// 컨트롤 버튼 동작 (store 액션 호출)
 function toggleMinimized() {
   if (windowData.value) {
     windowStore.toggleMinimized(windowData.value.id);
@@ -262,11 +282,13 @@ onBeforeUnmount(() => {
   position: absolute;
   background-color: #f7f7f7;
   border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 10px rgba(0,0,0,0.3);
   overflow: hidden;
   touch-action: none;
   box-sizing: border-box;
 }
+
+/* window-header 스타일 */
 .window-header {
   display: flex;
   justify-content: center;
@@ -275,6 +297,7 @@ onBeforeUnmount(() => {
   background-color: #2b2b2b;
   border-bottom: 1px solid #d6d6d6;
   position: relative;
+  cursor: move;
 }
 .window-title {
   font-size: 14px;
@@ -313,10 +336,16 @@ onBeforeUnmount(() => {
 .window-close:hover {
   background-image: url('../assets/red_h.webp');
 }
+
+/* window-content 스타일 - cursor를 inherit로 변경하여 부모의 커서 스타일을 반영 */
 .window-content {
+  position: relative;
+  z-index: 1;
   overflow: auto;
   max-height: calc(100% - 40px);
   padding: 12px;
   color: #333;
+  user-select: text;
+  cursor: inherit;
 }
 </style>

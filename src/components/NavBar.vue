@@ -64,6 +64,7 @@ const handleClick = (icon) => {
 <style scoped>
 /* 기존 Dock 관련 스타일 그대로 사용 */
 .dock {
+  z-index: 1000000000000;
   width: auto;
   height: 60px;
   border-radius: 16px;

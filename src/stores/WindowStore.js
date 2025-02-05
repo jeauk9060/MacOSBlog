@@ -60,6 +60,11 @@ export const useWindowStore = defineStore('window', {
     toggleMaximized(id) {
       const win = this.windows.find(win => win.id === id);
       if (win && !win.closed) {
+        // 만약 창이 최소화된 상태라면 먼저 복원합니다.
+        if (win.minimized) {
+          win.minimized = false;
+        }
+        // 최대화 상태 토글
         win.maximized = !win.maximized;
         if (win.maximized) {
           // 복원을 위해 현재 상태 저장 후 전체 화면 적용
@@ -74,6 +79,7 @@ export const useWindowStore = defineStore('window', {
         }
       }
     },
+
     // 창 닫기: 닫힘 상태로 전환 (Dock에서 다시 열 수 있도록 복원 액션 필요)
     closeWindow(id) {
       const win = this.windows.find(win => win.id === id);
