@@ -9,9 +9,9 @@ const routes = [
     path: '/',
     component: DesktopPage,
     children: [
-      { path: '', component: MainPage },
-      { path: 'post', component: NotionList },
-      { path: 'post/:index', component: NotionDetail },
+      { path: '/', component: MainPage },
+      { path: '/post', component: NotionList },
+      { path: '/post/:index', component: NotionDetail },
     ]
   }
 ];
