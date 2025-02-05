@@ -3,10 +3,10 @@
     <TopNav />
     <v-main>
       <v-container fluid class="desktop-container">
-        <!-- 창 컴포넌트 -->
+        <!-- 'blog' 창만 렌더링 (다른 창들도 추가 가능) -->
         <WindowComponent
           v-for="window in windowStore.windows.filter(win => win.name === 'blog')"
-          :key="window.name"
+          :key="window.id"
           v-show="!window.minimized && !window.closed"
           :name="window.name"
           :maximized="window.maximized"
@@ -32,7 +32,7 @@ const windowStore = useWindowStore();
 
 <style scoped>
 .desktop-container {
-  padding: 0px;
+  padding: 0;
   position: relative;
   height: calc(100vh - 30px);
   background-color: gray;

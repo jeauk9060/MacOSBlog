@@ -1,8 +1,10 @@
 <template>
   <div class="home-container">
-
-      <router-link to="/post" class="start-button">블로그 보러가기 →</router-link>
-    </div>
+    <h1>블로그 홈</h1>
+    <p>블로그 글 목록 등이 표시됩니다.</p>
+    <!-- 예시: 다른 블로그 페이지로 이동하는 버튼 -->
+    <router-link to="/post" class="start-button">블로그 보러가기 →</router-link>
+  </div>
 </template>
 
 <script setup>
@@ -28,26 +30,6 @@ p {
   font-size: 1.2rem;
   color: #555;
   line-height: 1.5;
-}
-
-.feature-section {
-  margin-top: 30px;
-}
-
-.feature-section ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.feature-section li {
-  font-size: 1.1rem;
-  margin: 5px 0;
-  color: #333;
-}
-
-.action-section {
-  margin-top: 30px;
 }
 
 .start-button {
