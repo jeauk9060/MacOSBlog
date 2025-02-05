@@ -1,19 +1,26 @@
 <template>
   <div class="notion-container">
-    <!-- 썸네일 -->
-    <div v-if="selectedItem?.thumbnailUrl" class="thumbnail">
-      <img :src="selectedItem.thumbnailUrl" alt="썸네일" />
-    </div>
+    <!-- 데이터가 완전히 로드된 경우에만 표시 -->
+    <template v-if="blockMap">
+      <!-- 썸네일 -->
+      <div v-if="selectedItem?.thumbnailUrl" class="thumbnail">
+        <img :src="selectedItem.thumbnailUrl" alt="썸네일" />
+      </div>
 
-    <!-- 제목 및 날짜 정보 -->
-    <div class="article-info">
-      <p class="article-date"><strong>작성일:</strong> {{ selectedItem?.createdAt }}</p>
-      <p class="article-date"><strong>수정일:</strong> {{ selectedItem?.updatedAt }}</p>
-    </div>
+      <!-- 제목 및 날짜 정보 (작성일, 수정일) -->
+      <div class="article-info">
+        <p class="article-date"><strong>작성일:</strong> {{ selectedItem?.createdAt }}</p>
+        <p class="article-date"><strong>수정일:</strong> {{ selectedItem?.updatedAt }}</p>
+      </div>
 
-    <!-- Notion 본문 -->
-    <NotionRenderer v-if="blockMap" :blockMap="blockMap" fullPage />
-    <p v-else>⏳ 데이터를 불러오는 중...</p>
+      <!-- Notion 본문 -->
+      <NotionRenderer :blockMap="blockMap" fullPage />
+    </template>
+
+    <!-- 데이터 로드 중일 때 -->
+    <template v-else>
+      <LoadingBar />
+    </template>
 
     <!-- 이전 글 / 다음 글 카드 -->
     <div class="article-nav">
@@ -34,6 +41,7 @@
 import { ref, onMounted, watch } from "vue";
 import { useRoute } from "vue-router";
 import { NotionRenderer, getPageBlocks } from "vue-notion";
+import LoadingBar from "@/components/tools/LoadingBar.vue";
 
 const route = useRoute();
 const blockMap = ref(null);
@@ -62,11 +70,10 @@ const fetchNotionData = async () => {
 
     const data = await response.json();
     // 각 페이지의 정보를 매핑합니다.
-    // 여기서 unique_id 값은 Notion 데이터베이스의 "ID" 속성 내의 unique_id.number를 사용합니다.
     databaseItems.value = data.results.map((item, index) => ({
       id: item.id,
       index: index,
-      uniqueId: item.properties.ID.unique_id.number, // 고유번호 저장 (예, 1, 2, 3 등)
+      uniqueId: item.properties.ID.unique_id.number, // 고유번호 저장 (예: 1, 2, 3 등)
       title: item.properties.title.title[0]?.plain_text || "제목 없음",
       createdAt: item.properties.createdAt.created_time,
       updatedAt: item.properties.updatedAt.last_edited_time,
@@ -104,7 +111,7 @@ const fetchNotionData = async () => {
 // 컴포넌트가 처음 마운트될 때 데이터를 불러옵니다.
 onMounted(fetchNotionData);
 
-// route 파라미터가 변경될 때마다 fetchNotionData()를 재호출하여 화면 갱신을 수행합니다.
+// route 파라미터가 변경될 때마다 데이터를 갱신합니다.
 watch(
   () => route.params.index,
   (newVal, oldVal) => {
@@ -114,7 +121,6 @@ watch(
   }
 );
 </script>
-
 
 <style>
 @import "vue-notion/src/styles.css";
@@ -134,7 +140,7 @@ watch(
   border-radius: 10px;
 }
 
-/* 날짜 스타일 */
+/* 날짜 및 정보 스타일 */
 .article-info {
   text-align: auto;
   margin-top: 10px;
