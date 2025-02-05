@@ -10,7 +10,7 @@ export const useWindowStore = defineStore('window', {
         minimized: false,           // 최소화 여부
         maximized: false,           // 최대화 여부
         closed: false,              // 닫힘 여부
-        position: { x: 100, y: 100 }, // 현재 위치
+        position: { x: 0, y: 0 }, // 현재 위치
         size: { width: 850, height: 800 },  // 현재 크기
         zIndex: 101,                // 창 포커싱을 위한 z-index
         // 창이 처음 생성되었을 때의 기본 상태를 저장합니다.
