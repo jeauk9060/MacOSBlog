@@ -5,7 +5,6 @@
       <div class="nav-text hidden-small">Developer</div>
       <div class="nav-text hidden-small">Jae-Uk</div>
       <div class="nav-text hidden-small">Hwang</div>
-      <div class="nav-text hidden-small">Portfolio</div>
     </div>
     <div class="nav-right">
       <div class="date text-right">
