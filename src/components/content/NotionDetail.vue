@@ -50,8 +50,8 @@ const selectedItem = ref(null);
 const prevArticle = ref(null);
 const nextArticle = ref(null);
 
-const NOTION_API_KEY = "Bearer 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";
-const DATABASE_ID = "17eb7cf2f7a080cc8bc0f1e287dc122b";
+const NOTION_API_KEY = import.meta.env.VITE_NOTION_API_KEY;
+const DATABASE_ID = import.meta.env.VITE_DATABASE_ID;
 
 const fetchNotionData = async () => {
   try {
