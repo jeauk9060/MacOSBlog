@@ -35,8 +35,12 @@ const windowStore = useWindowStore();
   padding: 0;
   position: relative;
   height: calc(100vh - 30px);
-  background-color: gray;
+  background-image: url("src/assets/dark.webp");
+  background-size: cover; /* 배경을 컨테이너에 맞게 조정 */
+  background-position: center; /* 배경을 중앙에 배치 */
+  background-repeat: no-repeat; /* 배경 반복 방지 */
   overflow: hidden;
 }
+
 
 </style>
